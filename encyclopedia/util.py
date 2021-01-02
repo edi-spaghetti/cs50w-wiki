@@ -4,13 +4,22 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 
 
-def list_entries():
+def list_entries(title=None):
     """
-    Returns a list of all names of encyclopedia entries.
+    Returns a list of names of encyclopedia entries, optionally filtered.
+    :param title: String to filter entry names by. If None, no filtering done.
+    :rtype: list[str]
     """
     _, filenames = default_storage.listdir("entries")
-    return list(sorted(re.sub(r"\.md$", "", filename)
-                for filename in filenames if filename.endswith(".md")))
+    markdown_files = [f for f in filenames if f.endswith('.md')]
+    entries = [re.sub("\.md$", "", f) for f in markdown_files]
+
+    if title is None:
+        filtered_entries = entries
+    else:
+        filtered_entries = [e for e in entries if title in e]
+
+    return list(sorted(filtered_entries))
 
 
 def save_entry(title, content):
