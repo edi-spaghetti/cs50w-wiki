@@ -44,6 +44,8 @@ def save_entry(title, content):
         default_storage.delete(filename)
     default_storage.save(filename, ContentFile(content))
 
+    return entry_exists(title)
+
 
 def get_entry(title):
     """
@@ -55,3 +57,26 @@ def get_entry(title):
         return f.read().decode("utf-8")
     except FileNotFoundError:
         return None
+
+
+def get_file_name(title):
+    """
+    Determines file name from title
+    :param title: File name without extension and parent directories
+    :return: Path to markdown file
+    """
+    return f"entries/{title}.md"
+
+
+def delete_entry(title):
+    """
+    Delete entry file, if it exists
+    :param title: File name without extension and parent directories
+    :return: True if delete was successful, else False
+    """
+    filename = get_file_name(title)
+    if default_storage.exists(filename):
+        default_storage.delete(filename)
+        return not entry_exists(title)
+    else:
+        return False

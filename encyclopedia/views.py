@@ -10,18 +10,38 @@ class NewWikiForm(forms.Form):
     title = forms.CharField(label="Title")
     content = forms.CharField(widget=forms.Textarea)
 
-    def is_valid(self):
+    def exists(self):
         """
-        Check form validity by its field contents, as well as checking if it
-        already exists (which would also make it invalid)
+        Checks if the entry exists on disk.
         :rtype: bool
         """
+        # NOTE: self.is_valid creates the cleaned data attribute, so we call
+        # that first in case it hasn't already been, so we have access to the
+        # cleaned data.
+        if not hasattr(self, 'cleaned_data'):
+            self.is_valid()
 
-        valid = super(NewWikiForm, self).is_valid()
-        # NOTE: self.is_valid also creates the cleaned data attribute
+        # now check existence with util function
         exists = util.entry_exists(self.cleaned_data["title"])
+        return exists
 
-        return valid and not exists
+    def save(self):
+        """
+        Saves form data to disk.
+        :return: True if save successful, else False
+        """
+
+        # validate and set up cleaned data
+        if not hasattr(self, 'cleaned_data'):
+            valid = self.is_valid()
+            if not valid:
+                return valid
+
+        success = util.save_entry(
+            self.cleaned_data["title"],
+            self.cleaned_data["content"]
+        )
+        return success
 
 
 def index(request):
@@ -61,7 +81,7 @@ def create_wiki(request):
         # create the page from params
         form = NewWikiForm(request.POST)
 
-        if not form.is_valid():
+        if not form.is_valid() or form.exists():
             return render(request, "encyclopedia/create.html", {
                 "error": True,
                 "form": form,
@@ -81,4 +101,60 @@ def create_wiki(request):
     return render(request, "encyclopedia/create.html", {
         "error": False,
         "form": NewWikiForm()
+    })
+
+
+def update_wiki(request, title):
+    error_message = ""
+
+    if request.method == "POST":
+
+        form = NewWikiForm(request.POST)
+
+        try:
+            error_message = "Invalid form data"
+            assert form.is_valid()
+
+            error_message = f"Cannot overwrite existing entry " \
+                            f"{form.cleaned_data['title']}"
+            assert not form.exists() or form.cleaned_data["title"] == title
+
+        except AssertionError:
+
+            return render(request, "encyclopedia/update.html", {
+                "error_message": error_message,
+                "title": title,
+                "form": form,
+            })
+
+        else:
+
+            # if validation passes, now we can save the file
+            form.save()
+
+            # if title was edited, we need to remove the old file
+            if form.cleaned_data["title"] != title:
+                util.delete_entry(title)
+
+            # redirect to edited page
+            return HttpResponseRedirect(
+                reverse(
+                    'wiki', args=[form.cleaned_data["title"]]
+                )
+            )
+
+    if util.entry_exists(title):
+
+        form = NewWikiForm({
+            "title": title,
+            "content": util.get_entry(title)
+        })
+
+    else:
+        form = None
+
+    return render(request, "encyclopedia/update.html", {
+        "error_message": error_message,
+        "title": title,
+        "form": form,
     })
