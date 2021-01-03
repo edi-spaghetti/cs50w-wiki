@@ -1,3 +1,5 @@
+import random
+
 from django.shortcuts import render
 from django.urls import reverse
 from django.http import HttpResponseRedirect
@@ -158,3 +160,14 @@ def update_wiki(request, title):
         "title": title,
         "form": form,
     })
+
+
+def random_wiki(request):
+
+    entries = util.list_entries()
+    selection = random.choice(entries)
+    return HttpResponseRedirect(
+        reverse(
+            "wiki", args=[selection]
+        )
+    )
