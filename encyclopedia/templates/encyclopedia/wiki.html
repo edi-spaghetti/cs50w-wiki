@@ -6,15 +6,16 @@
 
 {% block body %}
     {% if content %}
-        <h1>{{title}}</h1>
+        <h1 class="text-muted">{{title}}</h1>
         <a class="btn btn-link" href="{% url 'update' title %}" role="button">Edit</a>
+        <hr/>
         {{ content|safe }}
     {% else %}
         <h1>Page Not Found</h1>
-        <span>
+        <div class="alert alert-warning" role="alert">
             No page with the exact name '{{ title }}' found. <br>
             It might have a different spelling, or it doesn't exists yet.
-        </span>
+        </div>
     {% endif %}
 
 {% endblock %}

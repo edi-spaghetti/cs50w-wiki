@@ -6,6 +6,7 @@
 
 {% block body %}
     <h1>Edit Wiki Page</h1>
+    <hr/>
     {% if error_message %}
         <div class="alert alert-warning" role="alert">
             {{ error_message }}
@@ -13,9 +14,30 @@
     {% endif %}
     {% if form %}
         <form action="{% url 'update' title %}" method="post">
+            <div class="col-lg-10 text-right">
+                <button class="btn btn-light" type="submit">Save Page</button>
+            </div>
+
             {% csrf_token %}
-            {{ form }}
-            <button class="btn btn-light" type="submit">Save Page</button>
+
+            {% for field in form %}
+                <div class="col-lg-10 col-md-9">
+                    {% if field.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ field.label_tag }} {{ field.errors }}
+                        </div>
+                    {% else %}
+                        {{ field.label_tag }}
+                    {% endif %}
+                </div>
+                <div class="col-lg-10 col-md-9">
+                    {{ field }}
+                </div>
+            {% endfor %}
+
+            <div class="col-lg-10 text-right">
+                <button class="btn btn-light" type="submit">Save Page</button>
+            </div>
         </form>
     {% else %}
         <div class="alert alert-warning" role="alert">

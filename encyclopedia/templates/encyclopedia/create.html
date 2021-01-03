@@ -8,12 +8,33 @@
     <h1>Create New Wiki Page</h1>
     {% if error %}
         <div class="alert alert-warning" role="alert">
-            That page already exists, please choose a different title.
+            Got errors, see below.
         </div>
     {% endif %}
     <form action="{% url 'create' %}" method="post">
+        <div class="col-lg-10 text-right">
+            <button class="btn btn-light" type="submit">Save Page</button>
+        </div>
+
         {% csrf_token %}
-        {{ form }}
-        <button class="btn btn-light" type="submit">Save Page</button>
+
+        {% for field in form %}
+            <div class="col-lg-10 col-md-9">
+                {% if field.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ field.label_tag }} {{ field.errors }}
+                    </div>
+                {% else %}
+                    {{ field.label_tag }}
+                {% endif %}
+            </div>
+            <div class="col-lg-10 col-md-9">
+                {{ field }}
+            </div>
+        {% endfor %}
+
+        <div class="col-lg-10 text-right">
+            <button class="btn btn-light" type="submit">Save Page</button>
+        </div>
     </form>
 {% endblock %}
