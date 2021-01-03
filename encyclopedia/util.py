@@ -29,7 +29,7 @@ def entry_exists(title):
     :return: True if exists, else False
     """
 
-    filename = f"entries/{title}.md"
+    filename = get_file_name(title)
     return default_storage.exists(filename)
 
 
@@ -39,7 +39,7 @@ def save_entry(title, content):
     content. If an existing entry with the same title already exists,
     it is replaced.
     """
-    filename = f"entries/{title}.md"
+    filename = get_file_name(title)
     if default_storage.exists(filename):
         default_storage.delete(filename)
     default_storage.save(filename, ContentFile(content))
@@ -53,7 +53,8 @@ def get_entry(title):
     entry exists, the function returns None.
     """
     try:
-        f = default_storage.open(f"entries/{title}.md")
+        file_name = get_file_name(title)
+        f = default_storage.open(file_name)
         return f.read().decode("utf-8")
     except FileNotFoundError:
         return None
