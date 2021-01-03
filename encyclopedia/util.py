@@ -55,7 +55,8 @@ def get_entry(title, as_html=False):
     try:
         file_name = get_file_name(title)
         f = default_storage.open(file_name)
-        text = f.read().decode("utf-8")
+        # normalise line endings by removing any carriage returns
+        text = f.read().decode("utf-8").replace('\r', '')
 
         if as_html:
             text = markdown_to_html(text)
@@ -117,8 +118,9 @@ def markdown_to_html(markdown):
         markdown = re.sub(char, safe_char, markdown)
 
     # Split the markdown into blocks, as determined by 2 or more line breaks
+    # assume newlines have been normalised
     # TODO: header doesn't require double line break
-    blocks = re.split('(?:\r\n|\r|\n)(?:\r\n|\r|\n)+', markdown)
+    blocks = re.split('(?:\n)(?:\n)+', markdown)
 
     for block in blocks:
 
@@ -134,7 +136,7 @@ def markdown_to_html(markdown):
         elif unordered_list:
 
             text += "<ul>"
-            for list_item in re.split("(?:\r\n|\r|\n)", block):
+            for list_item in re.split("\n", block):
                 inner = re.sub("^\*\s", "", list_item)
                 inner = line_substitution(inner)
                 text += f"<li>{inner}</li>"

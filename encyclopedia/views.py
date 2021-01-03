@@ -41,7 +41,10 @@ class NewWikiForm(forms.Form):
 
         success = util.save_entry(
             self.cleaned_data["title"],
-            self.cleaned_data["content"]
+            # By default textarea returns \r\n, but django interprets this as
+            # two separate line endings, so every save duplicates all line
+            # endings. By removing the carriage return,
+            self.cleaned_data["content"].replace("\r", "")
         )
         return success
 
@@ -90,10 +93,7 @@ def create_wiki(request):
             })
 
         else:
-            util.save_entry(
-                form.cleaned_data["title"],
-                form.cleaned_data["content"]
-            )
+            form.save()
             return HttpResponseRedirect(
                 reverse(
                     'wiki', args=[form.cleaned_data["title"]]
