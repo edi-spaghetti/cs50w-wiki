@@ -70,7 +70,7 @@ def index(request):
 
 
 def load_wiki(request, title):
-    content = util.get_entry(title)
+    content = util.get_entry(title, as_html=True)
     return render(request, f"encyclopedia/wiki.html", {
         "content": content,
         "title": title,

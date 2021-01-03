@@ -8,7 +8,7 @@
     {% if content %}
         <h1>{{title}}</h1>
         <a class="btn btn-link" href="{% url 'update' title %}" role="button">Edit</a>
-        {{ content }}
+        {{ content|safe }}
     {% else %}
         <h1>Page Not Found</h1>
         <span>

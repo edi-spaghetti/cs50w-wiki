@@ -47,7 +47,7 @@ def save_entry(title, content):
     return entry_exists(title)
 
 
-def get_entry(title):
+def get_entry(title, as_html=False):
     """
     Retrieves an encyclopedia entry by its title. If no such
     entry exists, the function returns None.
@@ -55,7 +55,13 @@ def get_entry(title):
     try:
         file_name = get_file_name(title)
         f = default_storage.open(file_name)
-        return f.read().decode("utf-8")
+        text = f.read().decode("utf-8")
+
+        if as_html:
+            text = markdown_to_html(text)
+
+        return text
+
     except FileNotFoundError:
         return None
 
@@ -81,3 +87,79 @@ def delete_entry(title):
         return not entry_exists(title)
     else:
         return False
+
+
+def markdown_to_html(markdown):
+    """
+    Convert markdown text into html.
+    Currently supports:
+        - headings
+        - boldface text
+        - unordered lists
+        - links
+        - paragraphs
+    :param markdown: Text input in markdown format
+    :return: Html-formatted string
+    """
+
+    # init a container for text return value
+    text = ""
+
+    # sanitise incoming markdown to avoid injection
+    html_escape_table = {
+        "&": "&amp;",
+        '"': "&quot;",
+        "'": "&apos;",
+        ">": "&gt;",
+        "<": "&lt;",
+    }
+    for char, safe_char in html_escape_table.items():
+        markdown = re.sub(char, safe_char, markdown)
+
+    # Split the markdown into blocks, as determined by 2 or more line breaks
+    # TODO: header doesn't require double line break
+    blocks = re.split('(?:\r\n|\r|\n)(?:\r\n|\r|\n)+', markdown)
+
+    for block in blocks:
+
+        heading = re.match("(#+)\s", block)
+        unordered_list = block.startswith("* ")
+
+        if heading:
+            level = len(heading.group(1))
+            inner = re.sub("^#+\s", "", block)
+            inner = line_substitution(inner)
+            text += f"<h{level}>{inner}</h{level}>"
+
+        elif unordered_list:
+
+            text += "<ul>"
+            for list_item in re.split("(?:\r\n|\r|\n)", block):
+                inner = re.sub("^\*\s", "", list_item)
+                inner = line_substitution(inner)
+                text += f"<li>{inner}</li>"
+
+            text += "</ul>"
+
+        else:
+            text += "<p>"
+            text += line_substitution(block)
+            text += "</p>"
+
+    return text
+
+
+def line_substitution(text):
+    """
+    Replaces markdown with html for syntax that doesn't span multiple lines
+    Currently Supports:
+        - Bold
+        - Links
+    :param text: Markdown text that requires substitution
+    :return: Html-formatted text for supported tags
+    """
+
+    text = re.sub("\*\*([^\*.]+)\*\*", r"<b>\1</b>", text)
+    text = re.sub("\[([^\].]+)\]\(([^\).]+)\)", r'<a href="\2">\1</a>', text)
+
+    return text
