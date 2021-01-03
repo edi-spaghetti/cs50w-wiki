@@ -22,6 +22,17 @@ def list_entries(title=None):
     return list(sorted(filtered_entries))
 
 
+def entry_exists(title):
+    """
+    Checks if a given entry title already exists in storage
+    :param title: Name of a potential wiki
+    :return: True if exists, else False
+    """
+
+    filename = f"entries/{title}.md"
+    return default_storage.exists(filename)
+
+
 def save_entry(title, content):
     """
     Saves an encyclopedia entry, given its title and Markdown
