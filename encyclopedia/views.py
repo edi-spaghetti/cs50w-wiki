@@ -87,6 +87,15 @@ def create_wiki(request):
         form = NewWikiForm(request.POST)
 
         if not form.is_valid() or form.exists():
+
+            # if form is not valid, checking for existence will throw
+            # an error, so check that first
+            if form.is_valid() and form.exists():
+                form.add_error(
+                    "title",
+                    "An entry with this name already exists."
+                )
+
             return render(request, "encyclopedia/create.html", {
                 "error": True,
                 "form": form,
